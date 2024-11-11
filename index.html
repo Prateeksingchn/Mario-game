@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mario-like Game</title>
+    <title>Simple Mario-like Game</title>
     <style>
         body { margin: 0; overflow: hidden; }
-        canvas { display: block; }
+        canvas { display: block; background: lightblue; }
     </style>
 </head>
 <body>
@@ -39,9 +39,22 @@
             { x: 100, y: canvas.height - 350, width: 200, height: 20 }
         ];
 
+        // Collectibles
+        const coins = [];
+        for (let i = 0; i < 5; i++) {
+            coins.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * (canvas.height - 100),
+                width: 20,
+                height: 20,
+                collected: false
+            });
+        }
+
         // Game state
         let gameLoop;
         let gameState = 'playing';
+        let score = 0;
 
         // Game loop
         function update() {
@@ -50,7 +63,7 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 // Draw background
-                ctx.fillStyle = 'skyblue';
+                ctx.fillStyle = 'lightblue';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 // Apply gravity
@@ -77,14 +90,37 @@
                 }
 
                 // Draw player
-                ctx.fillStyle = 'red';
+                ctx.fillStyle = 'red'; // Player color
                 ctx.fillRect(player.x, player.y, player.width, player.height);
 
                 // Draw platforms
-                ctx.fillStyle = 'green';
                 platforms.forEach(platform => {
+                    ctx.fillStyle = 'green'; // Platform color
                     ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
                 });
+
+                // Draw coins
+                coins.forEach(coin => {
+                    if (!coin.collected) {
+                        ctx.fillStyle = 'gold';
+                        ctx.beginPath();
+                        ctx.arc(coin.x, coin.y, coin.width / 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                // Check for coin collection
+                coins.forEach(coin => {
+                    if (!coin.collected && player.x < coin.x + coin.width && player.x + player.width > coin.x && player.y < coin.y + coin.height && player.y + player.height > coin.y) {
+                        coin.collected = true;
+                        score += 10; // Increase score
+                    }
+                });
+
+                // Draw score
+                ctx.fillStyle = 'black';
+                ctx.font = '20px Arial';
+                ctx.fillText(`Score: ${score}`, 10, 30);
 
                 // Request next frame
                 gameLoop = requestAnimationFrame(update);
@@ -120,6 +156,8 @@
                 player.y = canvas.height - 100;
                 player.velY = 0;
                 gameState = 'playing';
+                score = 0; // Reset score
+                coins.forEach(coin => coin.collected = false); // Reset coins
                 gameLoop = requestAnimationFrame(update);
             }
         });
